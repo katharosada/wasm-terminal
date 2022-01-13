@@ -1,0 +1,24 @@
+{
+  "name": "wasm-terminal",
+  "version": "1.0.0",
+  "repository": "git@github.com:katharosada/wasm-terminal.git",
+  "scripts": {"start": "yarn webpack-dev-server"},
+  "author": "Katie Bell <katie@katharos.id.au>",
+  "license": "MIT",
+  "devDependencies": {
+    "css-loader": "^6.5.1",
+    "html-webpack-plugin": "^5.5.0",
+    "style-loader": "^3.3.1",
+    "ts-loader": "^9.2.6",
+    "ts-node": "^10.4.0",
+    "typescript": "^4.5.4",
+    "webpack": "^5.65.0",
+    "webpack-cli": "^4.9.1",
+    "webpack-dev-server": "^4.7.2"
+  },
+  "dependencies": {
+    "xterm": "^4.16.0",
+    "xterm-addon-fit": "^0.5.0",
+    "xterm-addon-web-links": "^0.5.0"
+  }
+}
