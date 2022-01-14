@@ -27,6 +27,10 @@ export default {
 
   entry: {
     client: './src/index.ts',
+    python_webworker: {
+      import: './src/worker/python-worker.ts',
+      filename: 'python-webworker.js'
+    }
   },
 
   optimization: {
@@ -60,6 +64,7 @@ export default {
   plugins: [
     new HtmlWebpackPlugin({
       template: './static/index.html',
+      chunks: ['client'],
     }),
   ],
 

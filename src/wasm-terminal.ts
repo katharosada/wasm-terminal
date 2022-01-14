@@ -76,7 +76,6 @@ export default class WasmTerminal {
     const focusHandler = this.focus.bind(this);
     if (this.container !== undefined) {
       MOBILE_KEYBOARD_EVENTS.forEach((eventName) => {
-        // @ts-ignore
         this.container.removeEventListener(eventName, focusHandler);
       });
     }
@@ -89,7 +88,6 @@ export default class WasmTerminal {
       // Fix for Mobile Browsers and their virtual keyboards
       if (this.container !== undefined) {
         MOBILE_KEYBOARD_EVENTS.forEach((eventName) => {
-          // @ts-ignore
           this.container.addEventListener(eventName, focusHandler);
         });
       }
@@ -98,9 +96,6 @@ export default class WasmTerminal {
         this.wasmTty.print(this.pendingPrintOnOpen + "\n");
         this.pendingPrintOnOpen = "";
       }
-
-      // tslint:disable-next-line
-      this.wasmShell.prompt();
     });
   }
 
@@ -139,17 +134,6 @@ export default class WasmTerminal {
     }
 
     this.wasmTty.print(message, sync);
-  }
-
-  runCommand(line: string) {
-    if (this.wasmShell.isPrompting()) {
-      this.wasmTty.setInput(line);
-      this.wasmShell.handleReadComplete();
-    }
-  }
-
-  runCommandDirect(line: string) {
-    return this.wasmShell.runCommand(line);
   }
 
   kill() {

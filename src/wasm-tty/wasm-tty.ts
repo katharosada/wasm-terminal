@@ -64,9 +64,8 @@ export default class WasmTTY {
    */
   read(
     promptPrefix: string,
-    continuationPromptPrefix: string = "> "
+    continuationPromptPrefix: string = ""
   ): ActivePrompt {
-    console.log('read')
     if (promptPrefix.length > 0) {
       this.print(promptPrefix);
     }

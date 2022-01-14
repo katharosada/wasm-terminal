@@ -56,57 +56,22 @@ export default class WasmShell {
     this._active = false;
   }
 
-  async prompt() {
-    console.log("prompt")
+  async prompt(): Promise<string> {
     // If we are already prompting, do nothing...
     if (this._activePrompt || this.disablePrompt) {
-      console.log(this._activePrompt)
-      console.log(this.disablePrompt)
-      return;
+      return '';
     }
 
     try {
-      this._activePrompt = this.wasmTty.read("$ ");
-      console.log(this._activePrompt)
+      this._activePrompt = this.wasmTty.read("");
       this._active = true;
       let line = await this._activePrompt.promise;
-
-      if (line === "") {
-        // Simply prompt again
-        this.prompt();
-        return;
-      }
-
+      return line
     } catch (e) {
-      console.log(e)
       this.wasmTty.println(`${e}`);
       // tslint:disable-next-line
       this.prompt();
     }
-  }
-
-  runCommand(line: string): Promise<boolean> {
-    return new Promise<boolean>((resolve) => {
-      // this.commandRunner = new CommandRunner(
-      //   this.wasmTerminalConfig,
-      //   line,
-      //   // Command Read Callback
-      //   () => {
-      //     this._activePrompt = this.wasmTty.read("");
-      //     this._active = true;
-      //     return this._activePrompt.promise;
-      //   },
-      //   // Command End Callback
-      //   (result) => {
-      //     resolve(result);
-      //     setTimeout(() => {
-      //       this.prompt();
-      //     });
-      //   },
-      //   this.wasmTty
-      // );
-      // this.commandRunner.runCommand();
-    });
   }
 
   isPrompting() {
@@ -228,10 +193,10 @@ export default class WasmShell {
   handleReadComplete = async (): Promise<any> => {
     if (this._activePrompt && this._activePrompt.resolve) {
       // TODO: Need to do stuff with this in a promise
-      this._activePrompt.resolve(this.wasmTty.getInput());
+      this._activePrompt.resolve(this.wasmTty.getInput() + '\n');
       this._activePrompt = undefined;
     }
-    this.wasmTty.print("\r\n");
+    this.wasmTty.print('\r\n')
     this._active = false;
   };
 
@@ -239,7 +204,6 @@ export default class WasmShell {
    * Handle terminal -> tty input
    */
   handleTermData = (data: string) => {
-    console.log(data)
     // Only Allow CTRL+C Through
     if (!this._active && data !== "\x03") {
       return;
@@ -264,7 +228,7 @@ export default class WasmShell {
     if (this._activeCharPrompt && this._activeCharPrompt.resolve) {
       this._activeCharPrompt.resolve(data);
       this._activeCharPrompt = undefined;
-      this.wasmTty.print("\r\n");
+      // this.wasmTty.print("\r\n");
       return;
     }
 
@@ -357,11 +321,7 @@ export default class WasmShell {
         case "\r": // ENTER
         case "\x0a": // CTRL+J
         case "\x0d": // CTRL+M
-          // if (isIncompleteInput(this.wasmTty.getInput())) {
-          //   this.handleCursorInsert("\n");
-          // } else {
-            this.handleReadComplete();
-          // }
+          this.handleReadComplete();
           break;
 
         case "\x7F": // BACKSPACE
