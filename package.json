@@ -2,11 +2,17 @@
   "name": "wasm-terminal",
   "version": "1.0.0",
   "repository": "git@github.com:katharosada/wasm-terminal.git",
-  "scripts": {"start": "yarn webpack-dev-server"},
+  "scripts": {
+    "start": "yarn webpack-dev-server",
+    "build": "yarn webpack",
+    "start-firebase": "yarn firebase emulators:start",
+    "deploy": "yarn firebase deploy"
+  },
   "author": "Katie Bell <katie@katharos.id.au>",
   "license": "MIT",
   "devDependencies": {
     "css-loader": "^6.5.1",
+    "firebase-tools": "^10.1.0",
     "html-webpack-plugin": "^5.5.0",
     "style-loader": "^3.3.1",
     "ts-loader": "^9.2.6",
