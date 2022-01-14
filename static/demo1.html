@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+  <head>
+     <script src="https://cdn.jsdelivr.net/pyodide/v0.18.1/full/pyodide.js"></script>
+  </head>
+  <body>
+   Pyodide test page
+   <script type="text/javascript">
+
+     async function main(){
+
+       let pyodide = await loadPyodide({
+         indexURL : "https://cdn.jsdelivr.net/pyodide/v0.18.1/full/"
+       });
+
+       pyodide.runPython(`
+           import sys
+           print(sys.version)
+           print(40 + 2)
+       `);
+
+     }
+     main();
+   </script>
+ </body>
+</html>
