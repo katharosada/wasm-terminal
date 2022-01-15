@@ -34,9 +34,9 @@ export default class WasmTerminal {
     this.wasmTerminalConfig = new WasmTerminalConfig(config);
 
     // Create our xterm element
-    this.xterm = new Terminal({
-      // rendererType: 'dom'
-    });
+    this.xterm = new Terminal(
+      { scrollback: 10000, fontSize: 14, theme: { background: '#1a1c1f' }, cols: 100}
+    );
     // tslint:disable-next-line
     // this.pasteEvent = this.xterm.on("paste", this.onPaste);
     // tslint:disable-next-line

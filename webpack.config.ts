@@ -27,6 +27,7 @@ export default {
 
   entry: {
     client: './src/index.ts',
+    demo2: './src/demo2.ts',
     python_webworker: {
       import: './src/worker/python-worker.ts',
       filename: 'python-webworker.js'
@@ -66,6 +67,18 @@ export default {
       template: './static/index.html',
       chunks: ['client'],
     }),
+    new HtmlWebpackPlugin({
+      template: './static/demo1.html',
+      filename: 'demo1.html',
+      chunks: [],
+    }),
+    new HtmlWebpackPlugin({
+      template: './static/demo2.html',
+      filename: 'demo2.html',
+      chunks: ['demo2'],
+    }),
+
+
   ],
 
   devtool: 'cheap-module-source-map',
