@@ -12,6 +12,8 @@ export class WorkerManager {
     private standardIO: StandardIO
     private stdinbuffer: SharedArrayBuffer
     private stdinbufferInt: Int32Array
+    private fetchBuffer: Uint8Array
+    private fetchBufferMeta: Int32Array
     private resolveWorkerReady: (status: boolean) => void
 
     constructor(workerURL: string, standardIO: StandardIO) {
@@ -37,9 +39,15 @@ export class WorkerManager {
         this.stdinbuffer = new SharedArrayBuffer(100 * Int32Array.BYTES_PER_ELEMENT)
         this.stdinbufferInt = new Int32Array(this.stdinbuffer)
         this.stdinbufferInt[0] = -1
+
+        this.fetchBuffer = new Uint8Array(new SharedArrayBuffer(128 * 1024));
+        this.fetchBufferMeta = new Int32Array(new SharedArrayBuffer(Int32Array.BYTES_PER_ELEMENT * 3),);
+
         this.worker.postMessage({
             type: 'run',
-            buffer: this.stdinbuffer,
+            stdinbuffer: this.stdinbuffer,
+            fetchBuffer: this.fetchBuffer,
+            fetchBufferMeta: this.fetchBufferMeta,
             code: code
         })
     }
@@ -60,6 +68,33 @@ export class WorkerManager {
         }
     }
 
+    handleFetch(fetchData: {method: string, url: string, headers: {[key: string]: string}, body: any}) {
+        fetch(fetchData.url, {
+            method: fetchData.method,
+            headers: fetchData.headers
+        }).then((response) => {
+            const returnStruct = {
+                status: response.status,
+                reason: response.statusText,
+                /* @ts-ignore */
+                headers: Object.fromEntries(response.headers.entries()),
+            }
+
+            response.arrayBuffer().then((bodyBuffer) => {
+                const body = new Uint8Array(bodyBuffer)
+                console.log(returnStruct)
+                const encoder = new TextEncoder();
+                const bytes = encoder.encode(JSON.stringify(returnStruct));
+                this.fetchBuffer.set(bytes, 0);
+                this.fetchBuffer.set(body, bytes.length)
+                Atomics.store(this.fetchBufferMeta, 1, bytes.length);
+                Atomics.store(this.fetchBufferMeta, 2, body.length);
+                Atomics.store(this.fetchBufferMeta, 0, 1);
+                Atomics.notify(this.fetchBufferMeta, 0);
+            })
+        })
+    }
+
     handleMessageFromWorker = (event: MessageEvent) => {
         const type = event.data.type
         if (type === 'ready') {
@@ -72,9 +107,13 @@ export class WorkerManager {
             // Leave it to the terminal to decide whether to chunk it into lines
             // or send characters depending on the use case.
             this.standardIO.stdin().then((inputValue) => {
-                console.log('GOt some stdin: ', inputValue)
+                console.log('Got some stdin: ', inputValue)
                 this.handleStdinData(inputValue)
             })
+        } else if (type === 'fetch') {
+            const fetchData = event.data.data
+            console.log(fetchData)
+            this.handleFetch(fetchData)
         }
       }
 

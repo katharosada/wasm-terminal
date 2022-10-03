@@ -7,7 +7,14 @@
     <title>Python terminal</title>
   </head>
   <body>
-    <textarea id="code"></textarea>
+    <textarea id="code">
+import requests
+
+response = requests.get('http://numbersapi.com/42')
+print(response)
+print(response.content)
+
+    </textarea>
     <div class="button-container">
 
       <button id="run" disabled>Run</button>

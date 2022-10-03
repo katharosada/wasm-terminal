@@ -1,5 +1,8 @@
 let pyodide = null
 let stdinbuffer = null
+let fetchBuffer: Uint8Array = null
+let fetchBufferMeta: Int32Array = null
+
 let rerun = false
 let readlines = []
 
@@ -66,17 +69,53 @@ const run = async (code) => {
   })
 }
 
+const syncFetch = {
+  request: (method: string, url: string, headers: any, body: any) => {
+    let objHeaders = {}
+    if (pyodide.isPyProxy(headers) && headers.type === 'dict') {
+      objHeaders = headers.toJs({dict_converter: Object.fromEntries})
+    }
+
+    postMessage({
+      type: 'fetch',
+      data: {
+        method: method,
+        url: url,
+        headers: objHeaders
+      }
+    })
+    const res = Atomics.wait(fetchBufferMeta, 0, 0)
+    const size = Atomics.exchange(fetchBufferMeta, 1, 0);
+    const contentSize = Atomics.exchange(fetchBufferMeta, 2, 0);
+    const bytes = fetchBuffer.slice(0, size);
+    const contentBytes = fetchBuffer.slice(size, size + contentSize);
+
+    Atomics.store(fetchBufferMeta, 1, 0);
+
+    const decoder = new TextDecoder();
+    const textJSON = decoder.decode(bytes);
+    const result = JSON.parse(textJSON)
+    result.body = contentBytes
+    return result
+  }
+}
+
 const initialise = async () => {
-    importScripts('https://cdn.jsdelivr.net/pyodide/v0.18.1/full/pyodide.js')
+    importScripts('https://cdn.jsdelivr.net/pyodide/v0.21.3/full/pyodide.js')
 
     // @ts-ignore
     pyodide = await loadPyodide({
         fullStdLib: false,
-        indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.18.1/full/',
+        indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.21.3/full/',
     })
-    postMessage({
-        type: 'ready',
-    })
+
+    // console.log('loading requests wheel')
+    await pyodide.loadPackage("micropip");
+    const micropip = pyodide.pyimport("micropip");
+
+    pyodide.registerJsModule('sync_fetch', syncFetch)
+
+    await micropip.install("http://localhost:5000/requests-2.28.1-py3-none-any.whl");
 
     // Unfortunately we need to fake-out stdin/stdout/stderr because Pyodide
     // doesn't give us access to the underlying emscripten FS streams which
@@ -87,6 +126,11 @@ const initialise = async () => {
       stdin: stdin,
     })
     pyodide.runPython(replaceStdioCode)
+
+    // console.log('done')
+    postMessage({
+      type: 'ready',
+    })
 }
 
 initialise()
@@ -94,7 +138,9 @@ initialise()
 onmessage = function (e) {
   switch (e.data.type) {
     case 'run':
-        stdinbuffer = new Int32Array(e.data.buffer)
+        stdinbuffer = new Int32Array(e.data.stdinbuffer)
+        fetchBuffer = e.data.fetchBuffer
+        fetchBufferMeta = e.data.fetchBufferMeta
         const code = e.data.code
         run(code)
         break
